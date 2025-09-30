@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>IR Quiz Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Header -->
+  <header>
+    <h1>IR Quiz Generator</h1>
+    <p>A randomized International Relations exam</p>
+  </header>
+
+  <!-- Main container -->
+  <div class="container">
+    
+    <!-- Navigation -->
+    <div class="navbar">
+      <button onclick="drawQuiz()">Generate New Quiz</button>
+      <button onclick="gradeMC()">Grade MC</button>
+    </div>
+
+    <!-- Quiz content -->
+    <div id="quiz"></div>
+
+
+  <!-- Footer -->
+  <footer>
+    <p>&copy; 2025 IR Quiz System — Darmin Tarasewicz</p>
+  </footer>
+
+  <!-- Load question bank + logic -->
+  <script src="questions.js"></script>
+  <script src="quiz.js"></script>
+</body>
+</html>

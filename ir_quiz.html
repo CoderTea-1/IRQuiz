@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Doctoral-Level Intro to IR — 50 Question Quiz + Essay</title>
+  <style>
+    :root{
+      --bg:#0f1724; --card:#0b1220; --muted:#94a3b8; --accent:#7dd3fc; --good:#10b981; --bad:#ef4444;
+      --glass: rgba(255,255,255,0.03);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+    html,body{height:100%}
+    body{
+      margin:0; background:linear-gradient(180deg,#071226 0%, #051023 100%); color:#e6eef6; padding:28px;
+    }
+    .container{max-width:1000px;margin:0 auto;background:var(--card);border-radius:12px;padding:22px;box-shadow:0 6px 30px rgba(2,6,23,0.7);}
+    h1{margin:0 0 8px;font-size:22px}
+    p.lead{margin:0 0 16px;color:var(--muted)}
+    .topbar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-bottom:18px}
+    .btn{background:var(--accent);color:#012026;padding:8px 12px;border-radius:8px;border:none;cursor:pointer;font-weight:600}
+    .btn-ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    .btn-danger{background:var(--bad);color:#fff}
+    .grid{display:grid;grid-template-columns:1fr 320px;gap:18px}
+    .panel{background:var(--glass);padding:14px;border-radius:10px}
+    .section{margin-bottom:20px;padding:12px;border-radius:8px;background:linear-gradient(180deg, rgba(255,255,255,0.01), transparent);border:1px solid rgba(255,255,255,0.02)}
+    .q{margin-bottom:14px}
+    .q h4{margin:0 0 6px;font-size:15px}
+    .choices label{display:block;margin-bottom:6px;cursor:pointer}
+    input[type="radio"]{margin-right:10px}
+    textarea{width:100%;min-height:90px;background:transparent;border:1px solid rgba(255,255,255,0.06);color:inherit;padding:8px;border-radius:6px;resize:vertical}
+    .shortarea{min-height:64px}
+    .progresswrap{height:12px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden;margin-top:6px}
+    .progressbar{height:100%;background:linear-gradient(90deg,var(--accent),#60a5fa);width:0%}
+    .stat{font-size:13px;color:var(--muted)}
+    .nav{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+    .nav button{padding:6px 8px;border-radius:6px;border:1px solid rgba(255,255,255,0.03);background:transparent;color:var(--muted);cursor:pointer}
+    .nav button.active{background:rgba(125,211,252,0.08);color:var(--accent);border-color:rgba(125,211,252,0.1)}
+    .score{font-weight:700;color:var(--accent)}
+    footer{margin-top:12px;font-size:13px;color:var(--muted)}
+    pre.json{max-height:220px;overflow:auto;background:#020617;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.03);color:#bfe9ff}
+    @media (max-width:980px){.grid{grid-template-columns:1fr;}.topbar{flex-direction:column;align-items:stretch}.panel{order:2}}
+  </style>
+</head>
+<body>
+  <div class="container" role="main">
+    <div class="topbar">
+      <div style="flex:1">
+        <h1>Doctoral-Level Intro to IR — 50 Q Quiz + Essay</h1>
+        <p class="lead">30 auto-graded multiple choice, 15 short-answer, 5 long-form, and 1 essay prompt. Save / print / export after completion.</p>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button id="gradeMC" class="btn">Grade MC</button>
+        <button id="exportJSON" class="btn btn-ghost">Export JSON</button>
+        <button id="resetBtn" class="btn btn-ghost">Reset</button>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <!-- Navigation -->
+        <div class="panel section">
+          <div class="nav" id="sectionNav"></div>
+          <div class="progresswrap" role="progressbar" aria-valuemin="0" aria-valuemax="100">
+            <div id="progress" class="progressbar"></div>
+          </div>
+          <div style="display:flex;gap:10px;align-items:center;margin-top:8px">
+            <div class="stat">MC Score: <span id="mcScore" class="score">—</span></div>
+            <div class="stat">MC Correct / 30: <span id="mcCorrect">0</span></div>
+            <div style="flex:1"></div>
+            <div class="stat">Export / Print when done</div>
+          </div>
+        </div>
+
+        <!-- Quiz content -->
+        <form id="quizForm" class="panel" onsubmit="return false;">
+          <!-- Multiple Choice Section -->
+          <div id="section-mc" class="section" data-title="Multiple Choice (30)">
+            <h3>Part I — Multiple Choice (30)</h3>
+            <p class="stat">Select the best answer for each question. Click <strong>Grade MC</strong> to auto-grade.</p>
+            <div id="mcQuestions"></div>
+          </div>
+
+          <!-- Short Answer Section -->
+          <div id="section-short" class="section" data-title="Short Answer (15)">
+            <h3>Part II — Short Answer (15)</h3>
+            <p class="stat">Answer concisely (2–6 sentences). Instructor grading required.</p>
+            <div id="shortQuestions"></div>
+          </div>
+
+          <!-- Long Form Section -->
+          <div id="section-long" class="section" data-title="Long Form (5)">
+            <h3>Part III — Long Form (5)</h3>
+            <p class="stat">Provide structured, evidence-based responses (500–1000 words suggested).</p>
+            <div id="longQuestions"></div>
+          </div>
+
+          <!-- Essay Prompt -->
+          <div id="section-essay" class="section" data-title="Essay (1)">
+            <h3>Essay Prompt</h3>
+            <p class="stat">Write one integrative essay. Suggested length: 2,000–3,000 words. Instructor grading required.</p>
+            <div class="q">
+              <h4>Essay:</h4>
+              <p class="stat">"Critically evaluate the explanatory power of realism, liberalism, and constructivism for the outbreak, course, and aftermath of a major 20th or 21st century war (choose one). Discuss levels of analysis, causal mechanisms, and the role of cognitive biases and misperception. Include a short methods appendix explaining how you would empirically test key claims."</p>
+              <textarea id="essay_1" name="essay_1" placeholder="Compose your essay here..."></textarea>
+            </div>
+          </div>
+
+        </form>
+      </div>
+
+      <!-- Side panel -->
+      <div class="panel">
+        <h4>Quick Actions</h4>
+        <p class="stat">Use these controls to manage and export responses.</p>
+
+        <div style="margin-top:10px">
+          <button id="fillSample" class="btn btn-ghost" title="Fill with sample answers for testing">Fill sample answers</button>
+        </div>
+
+        <div style="margin-top:12px">
+          <h4 style="margin-bottom:4px">Exported JSON</h4>
+          <pre id="jsonOut" class="json">No export yet.</pre>
+        </div>
+
+        <div style="margin-top:12px">
+          <h4 style="margin-bottom:4px">Notes</h4>
+          <p class="stat">MC auto-grading only grades Part I. Short answer, long form, and essay are for instructor evaluation.</p>
+        </div>
+        <footer>© Doctoral IR Quiz • Single-file HTML • Save locally to preserve answers</footer>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* ---------- DATA: Questions and answers ---------- */
+
+/* 30 MC questions (answers stored as index)
+   Answers are intentionally provided so the "Grade MC" button works.
+   The questions draw deliberately from typical doctoral-level IR content.
+*/
+const MC = [
+  { id: 1, q: 'Which of the following best describes the primary blind spot of structural realism (neorealism)?',
+    choices: ['It underestimates the influence of domestic politics.','It assumes actors are primarily motivated by economic incentives.','It dismisses the role of military power.','It assumes ideas, identities, and norms are central to state behavior.'],
+    answer: 0 },
+  { id: 2, q: 'The Melian Dialogue is most commonly used to illustrate which realist claim?',
+    choices: ['Norm internalization mitigates conflict','Might makes right and the primacy of power','Economic interdependence reduces war','Anarchy is primarily socially constructed'],
+    answer: 1 },
+  { id: 3, q: 'Waltz argues that the main cause of state behavior is:',
+    choices: ['Leaders’ personalities','Domestic regime type','Distribution of capabilities in the international system','Transnational normative networks'],
+    answer: 2 },
+  { id: 4, q: 'Which assumption is central to liberal institutionalism but weaker in classic realism?',
+    choices: ['States are unitary actors','Anarchy is absolute and unchangeable','Repeated interactions and institutions can mitigate anarchy','States always maximize relative gains'],
+    answer: 2 },
+  { id: 5, q: 'Alexander Wendt’s phrase "anarchy is what states make of it" primarily supports which paradigm?',
+    choices: ['Classical realism','Constructivism','Neoliberalism','Offensive realism'],
+    answer: 1 },
+  { id: 6, q: 'Which of the following best defines the security dilemma?',
+    choices: ['A state’s internal reforms triggering democratization elsewhere','Actions taken by one state to increase security that decrease others’ security','Economic sanctions that backfire','International law undermining sovereignty'],
+    answer: 1 },
+  { id: 7, q: 'Bandwagoning in balance-of-power theory most likely occurs when:',
+    choices: ['A strong state forms an alliance to oppose a rising power','Weak states align with a threatening power for protection','States internalize liberal norms','Economic interdependence increases'],
+    answer: 1 },
+  { id: 8, q: 'Which claim belongs to offensive realism (Mearsheimer) rather than defensive realism?',
+    choices: ['States primarily seek security','States are status-quo actors','Great powers will seek regional hegemony if possible','Institutions can significantly constrain state behavior'],
+    answer: 2 },
+  { id: 9, q: 'Constructivists emphasize that:',
+    choices: ['Material power solely determines state interests','Inter-subjective ideas shape identities and interests','Domestic interest groups never matter','Economic ties always prevent war'],
+    answer: 1 },
+  { id: 10, q: 'Commercial liberalism argues that high levels of trade:',
+    choices: ['Increase incentives for conquest','Have no political effects','Create domestic constituencies against war','Always produce democratic outcomes'],
+    answer: 2 },
+  { id: 11, q: 'Which is an example of an indivisible good in bargaining theory?',
+    choices: ['Monetary reparations','A single sacred religious site claimed by two states','Tariff schedules','A shared fishing quota'],
+    answer: 1 },
+  { id: 12, q: 'A preventive war is best characterized as:',
+    choices: ['Launched to stop an imminent attack within days','Fought to prevent a rival from becoming stronger in the future','Used as a strategy to defend territory','Always legal under international law'],
+    answer: 1 },
+  { id: 13, q: 'In Fearon’s model, private information can cause war because:',
+    choices: ['It makes credible commitments easier','States always reveal true resolve','States misrepresent capabilities or resolve, making bargaining fail','It prevents arms races'],
+    answer: 2 },
+  { id: 14, q: 'Which cognitive bias involves sticking to initial beliefs despite new evidence?',
+    choices: ['Optimism bias','Belief perseverance / slow updating','Fundamental attribution error','Loss aversion'],
+    answer: 1 },
+  { id: 15, q: 'Deterrence is primarily aimed at affecting:',
+    choices: ['An adversary’s future actions','An adversary’s current actions via immediate compellence','Domestic public opinion','Economic policy'],
+    answer: 0 },
+  { id: 16, q: 'Compellence differs from deterrence because compellence:',
+    choices: ['Seeks to maintain the status quo','Aims to change an adversary’s current behavior','Is always easier to achieve','Does not involve threats'],
+    answer: 1 },
+  { id: 17, q: 'Which variable is usually classified as a "third image" (system-level) cause?',
+    choices: ['Leader psychology','Regime type (democracy vs autocracy)','Polarity of the international system','Ethnic fractionalization'],
+    answer: 2 },
+  { id: 18, q: 'Which of the following best captures the liberal institutionalist perspective on cooperation?',
+    choices: ['Cooperation is impossible under anarchy','Institutions reduce transaction and information costs and foster cooperation','Institutions only serve great powers’ interests','Institutions always eliminate conflict'],
+    answer: 1 },
+  { id: 19, q: 'The “democratic peace” thesis claims:',
+    choices: ['Democracies never go to war for any reason','Democracies are less likely to fight each other than non-democracies','Democracies always form alliances','Democracies will always defeat autocracies'],
+    answer: 1 },
+  { id: 20, q: 'Soft power refers to:',
+    choices: ['Military capabilities and force projection','Economic sanctions','The ability to attract and persuade via culture and values','All forms of covert action'],
+    answer: 2 },
+  { id: 21, q: 'When does internal balancing occur?',
+    choices: ['When a state forms an alliance with others','When a state increases its own military capacity','When a state establishes international institutions','When a state reduces its defense spending'],
+    answer: 1 },
+  { id: 22, q: 'Which research method emphasizes deriving hypotheses from general theory and testing them on cases?',
+    choices: ['Inductive reasoning','Deductive reasoning','Grounded theory','Phenomenology'],
+    answer: 1 },
+  { id: 23, q: 'In constructing a causal mechanism, a scholar should:',
+    choices: ['Only present correlation coefficients','Describe the process by which X produces Y','Avoid specifying intervening steps','Rely exclusively on anecdote'],
+    answer: 1 },
+  { id: 24, q: 'A “tripwire” (e.g., stationing troops) is used in deterrence to:',
+    choices: ['Ensure easy defeat','Raise the perceived costs of attack and signal resolve','Hide military capability','Lower the defender’s reputation'],
+    answer: 1 },
+  { id: 25, q: 'What does “balance of power” theory imply states will typically do if a hegemon emerges?',
+    choices: ['Bandwagon with the hegemon','Seek to balance against the hegemon through alliances or armament','Immediately form a global government','Ignore capabilities shifts'],
+    answer: 1 },
+  { id: 26, q: 'Which of these is a classic example of motivated misperception in IR?',
+    choices: ['Cold War mirror-imaging of Soviet and U.S. intentions','Efficient market reactions to peaceful signals','Perfect information sharing','Immediate policy adaptation to evidence'],
+    answer: 0 },
+  { id: 27, q: 'When scholars say "states are unitary actors," they mean:',
+    choices: ['States are monolithic with a single set of preferences; internal politics can be abstracted away','States literally have no internal bureaucracy','Individuals cannot influence foreign policy','States don’t make mistakes'],
+    answer: 0 },
+  { id: 28, q: 'Which is an example of socialization in norm diffusion?',
+    choices: ['A hegemon directly coercing a neighbor','States internalizing human rights norms through international interactions','A sudden military coup','A tariff imposition'],
+    answer: 1 },
+  { id: 29, q: 'The “security dilemma” is most severe when:',
+    choices: ['Offensive and defensive capabilities are easy to distinguish','Offensive capabilities dominate defensive ones and intentions are hard to observe','All states are democratic','Trade interdependence is maximal'],
+    answer: 1 },
+  { id: 30, q: 'Why might a leader misperceive an adversary’s intentions despite good intelligence?',
+    choices: ['Because of cognitive biases, motivated reasoning, or institutional filtering','Because intelligence is always perfect','Because leaders always welcome bad news','Because of absolute transparency'],
+    answer: 0 }
+];
+
+/* 15 short-answer prompts (IDs 31-45) */
+const SHORT = [
+  { id: 31, q: 'Differentiate internal vs external balancing and provide a historical example of each.' },
+  { id: 32, q: 'Explain how commercial interdependence can create domestic constituencies that affect foreign policy.' },
+  { id: 33, q: 'Describe the three images/levels of analysis and apply them briefly to the 1914 outbreak of WWI.' },
+  { id: 34, q: 'Define the security dilemma and give a short contemporary example.' },
+  { id: 35, q: 'Explain why compellence is typically harder than deterrence.' },
+  { id: 36, q: 'What is meant by "indivisibility" in bargaining theory? Offer an example.' },
+  { id: 37, q: 'Briefly distinguish offensive and defensive realism and name a scholar associated with each.' },
+  { id: 38, q: 'What is a norm entrepreneur and how do they operate in constructivist accounts?' },
+  { id: 39, q: 'Give an example of belief perseverance in a major foreign policy decision.' },
+  { id: 40, q: 'How would a liberal institutionalist explain reduced conflict between Europe states after WWII?' },
+  { id: 41, q: 'Define "soft power" and provide one concrete historical example.' },
+  { id: 42, q: 'What is private information in Fearon’s framework and why does it matter?' },
+  { id: 43, q: 'How can domestic regime type (democracy/autocracy) affect foreign policy choices? Give one mechanism.' },
+  { id: 44, q: 'Explain "bandwagoning" and contrast it with balancing.' },
+  { id: 45, q: 'What is misperception and how can it lead to war? Give a concise causal chain.' }
+];
+
+/* 5 long-form prompts (IDs 46-50) */
+const LONG = [
+  { id: 46, q: 'Compare and evaluate the explanatory power of offensive realism and defensive realism for a case of your choice (e.g., German unification, China’s rise). Provide evidence and discuss limitations.' },
+  { id: 47, q: 'Assess the role of international institutions in mitigating the security dilemma. Use two contrasting cases and analyze causal mechanisms.' },
+  { id: 48, q: 'Construct a research design (theory, hypotheses, variables, data, and method) to test the democratic peace thesis.' },
+  { id: 49, q: 'Analyze the causes and consequences of a historical intelligence failure (e.g., Iraq 2003, Pearl Harbor). Emphasize cognitive, institutional, and systemic factors.' },
+  { id: 50, q: 'Develop an argument about how social norms transformed state interests in a specific historical episode (e.g., European integration, abolition movement, nuclear taboo).' }
+];
+
+
+/* ---------- RENDERING ---------- */
+
+function el(tag, attrs={}, children=[]){
+  const e = document.createElement(tag);
+  Object.entries(attrs).forEach(([k,v])=>{
+    if(k==='class') e.className=v;
+    else if(k==='html') e.innerHTML=v;
+    else e.setAttribute(k,v);
+  });
+  if(typeof children === 'string') e.textContent = children;
+  else children.forEach(c => e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c));
+  return e;
+}
+
+// render MC questions
+const mcContainer = document.getElementById('mcQuestions');
+MC.forEach(item => {
+  const qwrap = el('div',{class:'q', id:`q_mc_${item.id}`});
+  qwrap.appendChild(el('h4',{},[`${item.id}. ${item.q}`]));
+  const choices = el('div',{class:'choices'});
+  item.choices.forEach((c, idx) => {
+    const id = `mc_${item.id}_${idx}`;
+    const label = el('label',{},[]);
+    const radio = el('input',{type:'radio', name:`mc_${item.id}`, value:idx, id});
+    label.appendChild(radio);
+    label.appendChild(document.createTextNode(c));
+    choices.appendChild(label);
+  });
+  qwrap.appendChild(choices);
+  mcContainer.appendChild(qwrap);
+});
+
+// render short answers
+const shortContainer = document.getElementById('shortQuestions');
+SHORT.forEach(item => {
+  const qwrap = el('div',{class:'q', id:`q_short_${item.id}`});
+  qwrap.appendChild(el('h4',{},[`${item.id}. ${item.q}`]));
+  const ta = el('textarea',{id:`short_${item.id}`,name:`short_${item.id}`,class:'shortarea',placeholder:'Short answer...'});
+  qwrap.appendChild(ta);
+  shortContainer.appendChild(qwrap);
+});
+
+// render long answers
+const longContainer = document.getElementById('longQuestions');
+LONG.forEach(item => {
+  const qwrap = el('div',{class:'q', id:`q_long_${item.id}`});
+  qwrap.appendChild(el('h4',{},[`${item.id}. ${item.q}`]));
+  const ta = el('textarea',{id:`long_${item.id}`,name:`long_${item.id}`,placeholder:'Long-form response (instructor-graded).'});
+  qwrap.appendChild(ta);
+  longContainer.appendChild(qwrap);
+});
+
+/* ---------- NAVIGATION ---------- */
+const sections = [
+  { id:'section-mc', title: document.getElementById('section-mc').dataset.title },
+  { id:'section-short', title: document.getElementById('section-short').dataset.title },
+  { id:'section-long', title: document.getElementById('section-long').dataset.title },
+  { id:'section-essay', title: document.getElementById('section-essay').dataset.title || 'Essay' }
+];
+const navWrap = document.getElementById('sectionNav');
+sections.forEach((s, idx) => {
+  const btn = el('button',{},[s.title]);
+  if(idx===0) btn.classList.add('active');
+  btn.addEventListener('click',()=>{
+    document.querySelectorAll('.section').forEach(sec=>sec.style.display='none');
+    document.getElementById(s.id).style.display='block';
+    document.querySelectorAll('.nav button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+  navWrap.appendChild(btn);
+});
+// initialize: show only first section to start
+document.querySelectorAll('.section').forEach((sec,i)=>sec.style.display = i===0 ? 'block' : 'none');
+
+/* ---------- GRADING & UX ---------- */
+
+function gradeMC(){
+  let correct = 0;
+  MC.forEach(item => {
+    const radios = document.getElementsByName(`mc_${item.id}`);
+    let picked = null;
+    for(const r of radios) if(r.checked){ picked = Number(r.value); break; }
+    const qel = document.getElementById(`q_mc_${item.id}`);
+    qel.style.border = '1px solid rgba(255,255,255,0.02)';
+    qel.style.padding = '';
+    // mark correct/incorrect visually
+    if(picked === item.answer){
+      correct++;
+      qel.style.background = 'linear-gradient(180deg, rgba(16,185,129,0.06), transparent)';
+      qel.style.borderLeft = '4px solid rgba(16,185,129,0.9)';
+    } else {
+      qel.style.background = 'linear-gradient(180deg, rgba(239,68,68,0.04), transparent)';
+      qel.style.borderLeft = '4px solid rgba(239,68,68,0.9)';
+    }
+  });
+  const scorePct = Math.round((correct / MC.length) * 100);
+  document.getElementById('mcCorrect').textContent = correct;
+  document.getElementById('mcScore').textContent = `${scorePct}%`;
+  document.getElementById('progress').style.width = `${Math.min(100, Math.round((correct / MC.length) * 100))}%`;
+}
+
+// attach grade button
+document.getElementById('gradeMC').addEventListener('click', gradeMC);
+
+// reset
+document.getElementById('resetBtn').addEventListener('click', ()=>{
+  if(!confirm('Reset all answers? This will clear your work in this page.')) return;
+  // clear radios and textareas
+  MC.forEach(item => {
+    const radios = document.getElementsByName(`mc_${item.id}`);
+    for(const r of radios) r.checked = false;
+    const qel = document.getElementById(`q_mc_${item.id}`);
+    qel.style.background = '';
+    qel.style.borderLeft = '';
+  });
+  SHORT.forEach(s => document.getElementById(`short_${s.id}`).value = '');
+  LONG.forEach(l => document.getElementById(`long_${l.id}`).value = '');
+  document.getElementById('essay_1').value = '';
+  document.getElementById('mcCorrect').textContent = '0';
+  document.getElementById('mcScore').textContent = '—';
+  document.getElementById('progress').style.width = `0%`;
+  document.getElementById('jsonOut').textContent = 'No export yet.';
+});
+
+// export JSON
+function collectResponses(){
+  const resp = { mc: [], short: [], long: [], essay: [] };
+  MC.forEach(item => {
+    const radios = document.getElementsByName(`mc_${item.id}`);
+    let picked = null;
+    for(const r of radios) if(r.checked){ picked = Number(r.value); break; }
+    resp.mc.push({ id: item.id, question: item.q, chosen: picked, correct: item.answer, choices: item.choices });
+  });
+  SHORT.forEach(s => {
+    const val = document.getElementById(`short_${s.id}`).value.trim();
+    resp.short.push({ id: s.id, question: s.q, answer: val });
+  });
+  LONG.forEach(l => {
+    const val = document.getElementById(`long_${l.id}`).value.trim();
+    resp.long.push({ id: l.id, question: l.q, answer: val });
+  });
+  resp.essay.push({ id: 'essay_1', prompt: document.querySelector('#section-essay .stat + .q h4') ? document.querySelector('#section-essay .q h4').textContent : 'Essay', answer: document.getElementById('essay_1').value.trim() });
+  return resp;
+}
+
+document.getElementById('exportJSON').addEventListener('click', ()=>{
+  const data = collectResponses();
+  const pretty = JSON.stringify(data, null, 2);
+  document.getElementById('jsonOut').textContent = pretty;
+  // Also trigger download
+  const blob = new Blob([pretty], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'ir_quiz_responses.json';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+// fill sample (for testing)
+document.getElementById('fillSample').addEventListener('click', ()=>{
+  // pick first answer for MCs
+  MC.forEach(item => {
+    const r = document.getElementById(`mc_${item.id}_0`);
+    if(r) r.checked = true;
+  });
+  // sample short answers
+  SHORT.forEach(s => document.getElementById(`short_${s.id}`).value = 'Concise sample answer: see instructor notes.' );
+  LONG.forEach(l => document.getElementById(`long_${l.id}`).value = 'Long-form sample: outline main argument, evidence, mechanisms, and limitations.' );
+  document.getElementById('essay_1').value = 'Essay sample: Thesis statement, background, comparative analysis, methods appendix...';
+  gradeMC();
+});
+
+/* optional: keyboard navigation between sections (n/p) */
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'n'){ // next
+    const active = document.querySelector('.nav button.active');
+    if(active && active.nextSibling) active.nextSibling.click();
+  } else if(e.key === 'p'){
+    const active = document.querySelector('.nav button.active');
+    if(active && active.previousSibling) active.previousSibling.click();
+  }
+});
+
+/* initialize progress to 0 */
+document.getElementById('progress').style.width = '0%';
+</script>
+</body>
+</html>
